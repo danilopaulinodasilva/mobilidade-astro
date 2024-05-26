@@ -1,0 +1,56 @@
+---
+
+// @ts-nocheck
+
+import Card from "../../../../components/Card.astro";
+import MainLayout from "../../../../components/Layout.astro";
+import { getAllPosts, getAllTags } from "../../../../lib/client";
+
+export async function getStaticPaths({paginate}) {
+  // This would be your REST API or Graphql request that returns all your tags
+  const tagsResponse = await getAllTags();
+  
+  // This would be your REST API or Graphql request that returns all your posts
+  const posts = await getAllPosts();
+
+  // Convert the response to a simple array of slugs
+  const tags = tagsResponse.map((tag) => tag.slug);
+
+  // Use flatmap to iterate over each tag and get the posts that are tagged with each, then paginate them.
+  const flatmap = tags.flatMap( (tag) => {
+    // funky looking filter function, but checks if a post has the given tag (could also use indexOf, etc)
+    const filteredPosts = posts.filter((post) => post.tags.nodes.some(postTag => postTag.slug === tag));
+
+    return paginate(filteredPosts, {
+      params: { tag: tag },
+      pageSize: 10
+    });
+  });
+
+  // Can log out to check structure  
+  // console.log(flatmap)
+  return flatmap;
+
+}
+
+const { page } = Astro.props;
+const params = Astro.params;
+
+---
+
+<MainLayout>
+
+  <h1>Tag: {params.tag}</h1>
+
+  <section>
+    {page.data.map((post) => (
+      <Card post={post} />
+    ))}
+  </section>
+
+  <div class="flex gap-6 justify-center items-center py-12">
+		{page.url.prev ? <a class="p-3 rounded-md bg-slate-500 text-white" href={page.url.prev.replace(/\/page\/?$/, '')}>Previous</a> : <span class="text-gray-500 p-3 rounded-md block bg-gray-300">Previous</span>}
+		{page.url.next ? <a class="p-3 rounded-md bg-slate-500 text-white" href={page.url.next}>Next</a> : <span class="text-gray-500 p-3 rounded-md block bg-gray-300">Next</span>}
+	</div>
+  
+</MainLayout>

@@ -1,0 +1,42 @@
+---
+
+// @ts-nocheck
+
+import Card from "../components/Card.astro";
+import Layout from "../components/Layout.astro";
+import { getAllPosts } from "../lib/client";
+
+// Astro passes getStaticPaths {paginate} function as destructured argument
+export async function getStaticPaths({paginate}) {
+  
+	const posts = await getAllPosts();
+
+	// use pagination function to generate all our pages
+	return paginate(posts, {pageSize: 10});
+}
+
+// All pagination data is passed through the "page" prop
+const { page } = Astro.props;
+
+// Paginated entries are on page.data - we re-assign to posts for convenience
+const posts = page.data;
+
+---
+
+<Layout>
+	<div class="bg-slate-200 rounded-lg py-12">
+		<h1 class="text-center text-3xl">Our Articles</h1>
+	</div>
+	
+	<div class="flex flex-wrap pt-5 -mx-2.5">
+		{posts.map(post => (
+			<Card post={post} />
+		))}
+	</div>
+
+	<div class="flex gap-6 justify-center items-center py-12">
+		{page.url.prev ? <a class="p-3 rounded-md bg-slate-500 text-white" href={page.url.prev}>Previous</a> : <span class="text-gray-500 p-3 rounded-md block bg-gray-300">Previous</span>}
+		{page.url.next ? <a class="p-3 rounded-md bg-slate-500 text-white" href={page.url.next}>Next</a> : <span class="text-gray-500 p-3 rounded-md block bg-gray-300">Next</span>}
+	</div>
+
+</Layout>

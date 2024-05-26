@@ -1,0 +1,16 @@
+---
+import {getAllTags} from "../lib/client.js";
+const tags = await getAllTags()
+---
+
+<div class="flex items-center gap-8" style="margin-top: 1rem;">
+  <small>Tags: {tags.map((tag, index) => (
+    <a class="font-bold hover:underline" href={`/tag/${tag.slug}`}>{index} {tag.name}, </a>
+  ))}</small>
+</div>
+
+<footer class="bg-slate-300 py-10 px-4 text-center" style="margin-top: 1rem;">
+  <div class="container mx-auto">
+    Copyright 2024
+  </div>
+</footer>

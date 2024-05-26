@@ -1,0 +1,57 @@
+---
+
+// @ts-nocheck
+
+import Card from "../../../components/Card.astro";
+import MainLayout from "../../../components/Layout.astro";
+import { getAllAuthors, getAllPosts } from "../../../lib/client";
+
+export async function getStaticPaths({paginate}) {
+  // This would be your REST API or Graphql request that returns all your tags
+  const authorsResponse = await getAllAuthors();
+  
+  // This would be your REST API or Graphql request that returns all your posts
+  const posts = await getAllPosts();
+
+  // Convert the response to a simple array of slugs
+  const authors = authorsResponse.map((author) => author.slug);
+
+  // Use flatmap to iterate over each tag and get the posts that are tagged with each, then paginate them.
+  const flatmap = authors.flatMap((author) => {
+  const filteredPosts = posts.filter((post) => post.author.node.slug === author);
+
+    return paginate(filteredPosts, {
+      params: { author: author },
+      pageSize: 10
+    });
+
+  });
+
+  // Can log out to check structure 
+  // console.log(flatmap); 
+  return flatmap;
+
+}
+
+const { page } = Astro.props;
+const params = Astro.params;
+
+---
+
+<MainLayout>
+
+  <h1>Author: {params.author}</h1>
+
+  <section>
+    {page.data.map((post) => (
+      <Card post={post} />
+    ))}
+  </section>
+
+  <div class="flex gap-6 justify-center items-center py-12">
+		{page.url.next 
+      ? <a class="p-3 rounded-md bg-slate-500 text-white" href={page.url.next.replace(/\/(\d+)\/?$/, '/page/$1')}>Next</a>
+      : <span class="text-gray-500 p-3 rounded-md block bg-gray-300">Next</span>}
+	</div>
+  
+</MainLayout>
